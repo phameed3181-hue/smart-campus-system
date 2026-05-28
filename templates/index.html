@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Management System Ledger</title>
+    <title>Smart Campus Information Ledger</title>
     <style>
         :root {
             --bg-light: #f4f6f9;
@@ -12,6 +12,7 @@
             --text-muted: #6c757d;
             --primary-blue: #4361ee;
             --primary-purple: #7209b7;
+            --success-green: #2ec4b6;
             --border-color: #dee2e6;
         }
 
@@ -36,22 +37,15 @@
             font-weight: 700;
         }
 
-        header p {
-            color: var(--text-muted);
-            margin: 0;
-        }
-
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1.3fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
-            max-width: 1400px;
+            max-width: 1300px;
             margin: 0 auto;
         }
 
-        @media (max-width: 950px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 850px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
         .card {
             background: var(--card-bg);
@@ -64,9 +58,7 @@
             justify-content: space-between;
         }
 
-        .full-width {
-            grid-column: 1 / -1;
-        }
+        .full-width { grid-column: 1 / -1; }
 
         h2 {
             color: var(--primary-purple);
@@ -77,187 +69,132 @@
             font-weight: 700;
         }
 
-        .form-group {
-            margin-bottom: 12px;
+        .form-group { margin-bottom: 12px; }
+
+        .course-input-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
-        .course-marks-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 10px;
-            margin-bottom: 8px;
-            align-items: center;
+        .course-input-container input { flex: 1; }
+
+        .course-input-container button {
+            width: auto;
+            background: var(--primary-purple);
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
         }
+
+        .added-courses-list {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            min-height: 40px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .course-tag {
+            background: white;
+            border: 1px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .course-tag span { cursor: pointer; color: #ef476f; font-weight: bold; }
 
         label {
             display: block;
             margin-bottom: 4px;
             font-size: 0.85rem;
             font-weight: 600;
-            color: var(--text-dark);
         }
 
         input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 8px 12px;
-            background: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            color: var(--text-dark);
             box-sizing: border-box;
-            font-size: 0.9rem;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.12);
-        }
-
-        .checkbox-group {
-            margin: 15px 0;
-            display: flex;
-            gap: 20px;
         }
 
         .checkbox-group label {
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-bottom: 8px;
             cursor: pointer;
         }
 
-        .submit-btn-container {
-            grid-column: 1 / -1;
-        }
-
-        button.main-submit {
-            background: var(--primary-blue);
+        .action-btn {
             color: white;
             border: none;
-            padding: 14px 20px;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 4px;
             cursor: pointer;
             width: 100%;
             font-weight: bold;
-            font-size: 1rem;
+            margin-top: 15px;
+            font-size: 0.95rem;
             transition: background 0.2s;
-            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.15);
         }
 
-        button.main-submit:hover {
-            background: #3046bc;
-        }
+        .btn-register { background: var(--primary-blue); }
+        .btn-register:hover { background: #3046bc; }
+        .btn-enroll { background: var(--success-green); }
+        .btn-enroll:hover { background: #229a8e; }
 
-        .search-container {
-            margin-bottom: 15px;
-        }
-
-        .search-container input {
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
-            font-size: 0.9rem;
-        }
-
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th {
-            background-color: #f8f9fa;
-            color: var(--primary-blue);
-            font-weight: 600;
-        }
-
-        .badge {
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .badge-active { background: #d1e7dd; color: #0f5132; }
-        .badge-inactive { background: #e2e3e5; color: #41464b; }
-        
-        .fee-subtext {
-            display: block;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .course-tag {
-            background: #f1f3f5;
-            border: 1px solid #dee2e6;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin: 2px;
-            font-size: 0.8rem;
-        }
-
-        .purge-btn {
-            background: #fff5f5;
-            color: #e63946;
-            border: 1px solid #e63946;
-            padding: 4px 8px;
-            width: auto;
-            border-radius: 4px;
-            font-size: 0.8rem;
-        }
-
-        .purge-btn:hover {
-            background: #e63946;
-            color: white;
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
         .chart-wrapper {
             text-align: center;
             background: #ffffff;
-            padding: 15px;
-            border-radius: 6px;
             border: 1px solid var(--border-color);
-            max-width: 600px;
-            margin: 0 auto;
+            border-radius: 6px;
         }
 
-        .chart-wrapper img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-        }
+        .chart-wrapper img { max-width: 100%; height: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        th { background: #f8f9fa; color: var(--primary-blue); }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-active { background: #d1e7dd; color: #0f5132; }
+        .badge-inactive { background: #e2e3e5; color: #41464b; }
+        .fee-subtext { display: block; font-size: 0.75rem; color: var(--text-muted); }
+        .purge-btn { background: #fff5f5; color: #e63946; border: 1px solid #e63946; width: auto; padding: 4px 8px; border-radius: 4px; cursor: pointer;}
+        .purge-btn:hover { background: #e63946; color: white; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Campus Student Ledger Dashboard</h1>
-        <p>Institutional Record Archive & Financial Data Hub</p>
+        <h1>Smart Campus Information System</h1>
+        <p>Unified Institutional Records Processing Hub</p>
     </header>
 
     <div class="dashboard-grid">
         
         <div class="card">
             <div>
-                <h2>1. Core Identity & Services</h2>
+                <h2>1. Add Student Profile</h2>
                 <div class="form-group">
                     <label>Student ID (Unique UID)</label>
                     <input type="text" id="studentId" placeholder="e.g., DSCE-01">
@@ -268,99 +205,191 @@
                 </div>
                 <div class="form-group">
                     <label>Age</label>
-                    <input type="number" id="studentAge" placeholder="e.g., 19" min="15" max="100">
+                    <input type="number" id="studentAge" placeholder="19">
                 </div>
                 <div class="form-group">
-                    <label>Category Classification Tier</label>
+                    <label>Category Tier</label>
                     <select id="studentTier">
-                        <option value="Regular">Regular (Standard)</option>
-                        <option value="Scholar">Scholar (Premium)</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Scholar">Scholar</option>
                     </select>
                 </div>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="hostelCheck"> Hostel (₹15,000)</label>
-                    <label><input type="checkbox" id="transportCheck"> Transport (₹8,000)</label>
-                </div>
             </div>
+            <button class="action-btn btn-register" onclick="registerCoreIdentity()">Add Student Profile</button>
         </div>
 
         <div class="card">
             <div>
-                <h2>2. Course Enrollment & Marks Management Grid</h2>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top:-5px; margin-bottom:15px;">
-                    Enter the Course Name and the corresponding student score directly alongside it. Blank rows will be ignored.
-                </p>
+                <h2>2. Add Student Courses & Facilities</h2>
+                <div class="form-group">
+                    <label style="color: var(--primary-purple);">Target Student ID (Must Match Block 1)</label>
+                    <input type="text" id="targetEnrollmentId" placeholder="e.g., DSCE-01">
+                </div>
                 
-                <div class="course-marks-row" style="font-weight: bold; font-size: 0.85rem; color: var(--primary-blue);">
-                    <div>Course Module Name</div>
-                    <div>Score (100)</div>
+                <div class="form-group">
+                    <label>Add Course (One by One)</label>
+                    <div class="course-input-container">
+                        <input type="text" id="singleCourseInput" placeholder="e.g., Math, Java, CAED">
+                        <button type="button" onclick="addSingleCourseToList()">Add</button>
+                    </div>
+                </div>
+                
+                <label>Staged Courses:</label>
+                <div class="added-courses-list" id="addedCoursesContainer">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">No courses added yet.</span>
                 </div>
 
-                <div class="course-marks-row">
-                    <input type="text" class="course-name-input" placeholder="e.g., C-Programming">
-                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="hostelCheck"> Hostel Facility Allocation (₹15,000)</label>
+                    <label><input type="checkbox" id="transportCheck"> Campus Transport Allocation (₹8,000)</label>
                 </div>
-                <div class="course-marks-row">
-                    <input type="text" class="course-name-input" placeholder="e.g., Mathematics">
-                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
-                </div>
-                <div class="course-marks-row">
-                    <input type="text" class="course-name-input" placeholder="e.g., CAED">
-                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
-                </div>
-                <div class="course-marks-row">
-                    <input type="text" class="course-name-input" placeholder="e.g., Data Structures">
-                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
-                </div>
-                <div class="course-marks-row">
-                    <input type="text" class="course-name-input" placeholder="e.g., Python Lab">
-                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
+
+                <label style="margin-top: 10px; margin-bottom: 5px;">Marks Panel (Scores out of 100):</label>
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
+                    <div><input type="number" id="sub1" placeholder="S1" value="0" min="0" max="100"></div>
+                    <div><input type="number" id="sub2" placeholder="S2" value="0" min="0" max="100"></div>
+                    <div><input type="number" id="sub3" placeholder="S3" value="0" min="0" max="100"></div>
+                    <div><input type="number" id="sub4" placeholder="S4" value="0" min="0" max="100"></div>
+                    <div><input type="number" id="sub5" placeholder="S5" value="0" min="0" max="100"></div>
                 </div>
             </div>
-        </div>
-
-        <div class="submit-btn-container">
-            <button class="main-submit" onclick="commitStudentRecord()">Compile and Commit Unified Record Signature</button>
+            <button class="action-btn btn-enroll" onclick="commitCourseEnrollment()">Add Student Courses & Facilities</button>
         </div>
 
         <div class="card full-width">
-            <h2>Statistical Analytics Performance Pipeline</h2>
-            <div class="chart-wrapper">
-                <img id="barChart" src="/static/analytics_bar.png?t=0" alt="Bar Chart Metrics Layer">
+            <h2>Statistical Reports</h2>
+            <div class="charts-container">
+                <div class="chart-wrapper"><img id="pieChart" src="/static/analytics_pie.png?t=0" alt="Pie Chart"></div>
+                <div class="chart-wrapper"><img id="barChart" src="/static/analytics_bar.png?t=0" alt="Bar Chart"></div>
             </div>
         </div>
 
         <div class="card full-width">
             <h2>Live Database Record Ledger</h2>
-            <div class="search-container">
-                <input type="text" id="idSearchInput" placeholder="🔍 Search records ledger by unique student ID..." onkeyup="filterLedgerById()">
-            </div>
-
-            <div class="table-responsive">
-                <table id="ledgerTable">
-                    <thead>
-                        <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Age</th>
-                            <th>Tier</th>
-                            <th>Hostel Info</th>
-                            <th>Transport Info</th>
-                            <th>Enrolled Courses & Scores</th>
-                            <th>Total Fee</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ledgerBody">
-                        </tbody>
-                </table>
-            </div>
+            <table id="ledgerTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Tier</th>
+                        <th>Hostel</th>
+                        <th>Transport</th>
+                        <th>Enrolled Courses</th>
+                        <th>Marks Breakdown</th>
+                        <th>Total Fee</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerBody"></tbody>
+            </table>
         </div>
 
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', refreshLedgerData);
+        let currentCoursesList = [];
+
+        function addSingleCourseToList() {
+            const inputField = document.getElementById('singleCourseInput');
+            const courseName = inputField.value.trim();
+            if (!courseName) return;
+            if (currentCoursesList.includes(courseName)) { alert("Course already exists."); return; }
+            currentCoursesList.push(courseName);
+            inputField.value = '';
+            renderTemporaryCourseTags();
+        }
+
+        function removeCourseFromList(index) {
+            currentCoursesList.splice(index, 1);
+            renderTemporaryCourseTags();
+        }
+
+        function renderTemporaryCourseTags() {
+            const container = document.getElementById('addedCoursesContainer');
+            if (currentCoursesList.length === 0) {
+                container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No courses added yet.</span>';
+                return;
+            }
+            container.innerHTML = '';
+            currentCoursesList.forEach((course, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'course-tag';
+                tag.innerHTML = `${course} <span onclick="removeCourseFromList(${index})">&times;</span>`;
+                container.appendChild(tag);
+            });
+        }
+
+        // Action 1: Post Profile Details
+        function registerCoreIdentity() {
+            const id = document.getElementById('studentId').value.trim();
+            const name = document.getElementById('studentName').value.trim();
+            const age = document.getElementById('studentAge').value.trim();
+            const tier = document.getElementById('studentTier').value;
+
+            if(!id || !name || !age) { alert("Please complete Student ID, Name, and Age to initialize profile."); return; }
+
+            fetch('/api/students', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, name, age, tier })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    // Help user workflow by auto-filling the ID into Block 2 target
+                    document.getElementById('targetEnrollmentId').value = id;
+                    refreshLedgerData();
+                }
+            }).catch(err => alert("Communication fault with backend."));
+        }
+
+        // Action 2: Post Courses, Facilities, and Performance Marks
+        function commitCourseEnrollment() {
+            const id = document.getElementById('targetEnrollmentId').value.trim();
+            if(!id) { alert("Enter the Target Student ID to update enrollment indices."); return; }
+
+            const payload = {
+                id: id,
+                courses: currentCoursesList,
+                hostel: document.getElementById('hostelCheck').checked ? 'Yes' : 'No',
+                transport: document.getElementById('transportCheck').checked ? 'Yes' : 'No',
+                sub1: parseInt(document.getElementById('sub1').value) || 0,
+                sub2: parseInt(document.getElementById('sub2').value) || 0,
+                sub3: parseInt(document.getElementById('sub3').value) || 0,
+                sub4: parseInt(document.getElementById('sub4').value) || 0,
+                sub5: parseInt(document.getElementById('sub5').value) || 0
+            };
+
+            fetch('/api/students/enrollment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    // Wipe state elements upon compilation cycle finish
+                    currentCoursesList = [];
+                    renderTemporaryCourseTags();
+                    document.getElementById('hostelCheck').checked = false;
+                    document.getElementById('transportCheck').checked = false;
+                    document.getElementById('targetEnrollmentId').value = '';
+                    document.getElementById('studentId').value = '';
+                    document.getElementById('studentName').value = '';
+                    document.getElementById('studentAge').value = '';
+                    document.getElementById('sub1').value = '0';
+                    document.getElementById('sub2').value = '0';
+                    document.getElementById('sub3').value = '0';
+                    document.getElementById('sub4').value = '0';
+                    document.getElementById('sub5').value = '0';
+                    refreshLedgerData();
+                }
+            }).catch(err => alert("Communication error saving updates."));
+        }
 
         function refreshLedgerData() {
             fetch('/api/students')
@@ -368,6 +397,7 @@
                 .then(data => {
                     renderTable(data);
                     const timestamp = new Date().getTime();
+                    document.getElementById('pieChart').src = "/static/analytics_pie.png?t=" + timestamp;
                     document.getElementById('barChart').src = "/static/analytics_bar.png?t=" + timestamp;
                 });
         }
@@ -375,121 +405,27 @@
         function renderTable(students) {
             const tbody = document.getElementById('ledgerBody');
             tbody.innerHTML = '';
-            
             students.forEach(s => {
-                const hostelFeeText = s.hostel === 'Yes' ? '<span class="fee-subtext">₹15,000</span>' : '<span class="fee-subtext">₹0</span>';
-                const transportFeeText = s.transport === 'Yes' ? '<span class="fee-subtext">₹8,000</span>' : '<span class="fee-subtext">₹0</span>';
-
-                let courseScoresHTML = '';
-                let validCourseCount = 0;
-                if(s.course_scores && s.course_scores.length > 0) {
-                    validCourseCount = s.course_scores.length;
-                    s.course_scores.forEach(item => {
-                        courseScoresHTML += `<span class="course-tag"><strong>${item.course}</strong>: ${item.marks}</span>`;
-                    });
-                } else {
-                    courseScoresHTML = '<span class="text-muted">No Enrolled Courses</span>';
-                }
-
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td style="color: var(--primary-blue); font-weight: bold;">${s.id}</td>
+                    <td style="color:var(--primary-blue); font-weight:bold;">${s.id}</td>
                     <td><strong>${s.name}</strong></td>
-                    <td>${s.age || 'N/A'}</td>
+                    <td>${s.age}</td>
                     <td>${s.tier}</td>
-                    <td>
-                        <span class="badge ${s.hostel === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.hostel}</span>
-                        ${hostelFeeText}
-                    </td>
-                    <td>
-                        <span class="badge ${s.transport === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.transport}</span>
-                        ${transportFeeText}
-                    </td>
-                    <td>
-                        ${courseScoresHTML}
-                        <span class="fee-subtext">₹${(validCourseCount * 5000).toLocaleString()} (Tuition)</span>
-                    </td>
-                    <td style="font-weight: bold; color: var(--primary-purple); font-size: 1rem;">₹${s.total_fee.toLocaleString()}</td>
+                    <td><span class="badge ${s.hostel === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.hostel}</span></td>
+                    <td><span class="badge ${s.transport === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.transport}</span></td>
+                    <td>${s.courses.join(', ') || 'None'}<span class="fee-subtext">₹${(s.courses.length * 5000).toLocaleString()}</span></td>
+                    <td>S1:${s.sub1} | S2:${s.sub2} | S3:${s.sub3} | S4:${s.sub4} | S5:${s.sub5}</td>
+                    <td style="font-weight:bold; color:var(--primary-purple);">₹${s.total_fee.toLocaleString()}</td>
                     <td><button class="purge-btn" onclick="purgeRecord('${s.id}')">Delete</button></td>
                 `;
                 tbody.appendChild(row);
             });
         }
 
-        function commitStudentRecord() {
-            const id = document.getElementById('studentId').value.trim();
-            const name = document.getElementById('studentName').value.trim();
-            const age = document.getElementById('studentAge').value.trim();
-            const tier = document.getElementById('studentTier').value;
-            const hostel = document.getElementById('hostelCheck').checked ? 'Yes' : 'No';
-            const transport = document.getElementById('transportCheck').checked ? 'Yes' : 'No';
-            
-            const nameInputs = document.querySelectorAll('.course-name-input');
-            const scoreInputs = document.querySelectorAll('.course-score-input');
-            const course_scores = [];
-
-            for(let i=0; i < nameInputs.length; i++) {
-                const cName = nameInputs[i].value.trim();
-                const cScore = parseInt(scoreInputs[i].value) || 0;
-                if(cName !== "") {
-                    course_scores.push({ course: cName, marks: cScore });
-                }
-            }
-
-            if(!id || !name || !age) {
-                alert("Validation Fault: Student ID, Name, and Age require definitions.");
-                return;
-            }
-
-            const payload = { id, name, age, tier, hostel, transport, course_scores };
-
-            fetch('/api/students', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    document.getElementById('studentId').value = '';
-                    document.getElementById('studentName').value = '';
-                    document.getElementById('studentAge').value = '';
-                    document.getElementById('hostelCheck').checked = false;
-                    document.getElementById('transportCheck').checked = false;
-                    
-                    nameInputs.forEach(i => i.value = '');
-                    scoreInputs.forEach(i => i.value = '');
-                    
-                    refreshLedgerData();
-                } else {
-                    alert(data.message);
-                }
-            });
-        }
-
         function purgeRecord(studentId) {
             if(confirm(`Are you sure you want to delete student entry: ${studentId}?`)) {
-                fetch(`/api/students/${studentId}`, { method: 'DELETE' })
-                    .then(res => res.json())
-                    .then(() => refreshLedgerData());
-            }
-        }
-
-        function filterLedgerById() {
-            const input = document.getElementById('idSearchInput').value.toUpperCase();
-            const table = document.getElementById('ledgerTable');
-            const tr = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < tr.length; i++) {
-                const td = tr[i].getElementsByTagName('td')[0];
-                if (td) {
-                    const txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(input) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
+                fetch(`/api/students/${studentId}`, { method: 'DELETE' }).then(() => refreshLedgerData());
             }
         }
     </script>
