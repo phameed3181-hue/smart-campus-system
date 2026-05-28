@@ -1,165 +1,158 @@
-from flask import Flask, render_template, request, redirect, url_for
-import os
+from flask import Flask, render_template, request, jsonify
 import json
-import pandas as pd
-import numpy as np
+import os
 import matplotlib
-matplotlib.use('Agg')  # Prevents GUI popups on the server background
+matplotlib.use('Agg')  # Prevents GUI errors on cloud servers
 import matplotlib.pyplot as plt
-import io
-import base64
 
 app = Flask(__name__)
-STORAGE_FILE = "campus_records.json"
+DATA_FILE = 'campus_records.json'
 
-# ==========================================
-# FILE MANAGEMENT & UTILITY FUNCTIONS
-# ==========================================
-
-def load_data():
-    if os.path.exists(STORAGE_FILE):
-        try:
-            with open(STORAGE_FILE, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return {}
-    return {}
-
-def save_data(data):
+def load_records():
+    if not os.path.exists(DATA_FILE):
+        return []
     try:
-        with open(STORAGE_FILE, 'w') as f:
-            json.dump(data, f, indent=4)
-    except IOError as e:
-        print(f"Failed to write data to disk: {e}")
+        with open(DATA_FILE, 'r') as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []
 
-def calculate_fees(enrolled_courses, student_type, has_hostel, has_transport):
-    """Calculates updated dynamic tuition fees, optional hostel, and transport charges."""
-    base_fee_per_course = 10000  # Set to 10000 as requested
-    tuition_fee = len(enrolled_courses) * base_fee_per_course
-    
-    # 20% tuition concession for Scholars
-    if student_type.lower() == "scholar":
-        tuition_fee *= 0.80  
-        
-    # Optional Facility Add-ons
-    hostel_fee = 40000 if has_hostel else 0
-    transport_fee = 15000 if has_transport else 0
-    
-    total_fee = tuition_fee + hostel_fee + transport_fee
-    return int(total_fee)
-
-def evaluate_grade(marks):
-    if marks is None: return "N/A"
-    if marks >= 90: return "S"
-    elif marks >= 80: return "A"
-    elif marks >= 70: return "B"
-    elif marks >= 60: return "C"
-    elif marks >= 50: return "D"
-    else: return "F"
-
-
-# ==========================================
-# WEB APPLICATION ROUTES
-# ==========================================
+def save_records(records):
+    with open(DATA_FILE, 'w') as f:
+        json.dump(records, f, indent=4)
 
 @app.route('/')
 def index():
-    students = load_data()
-    display_students = []
-    rows = []
+    return render_template('index.html')
 
-    for sid, info in students.items():
-        # Read the optional flags, default to False if missing from older records
-        has_hostel = info.get('hostel', False)
-        has_transport = info.get('transport', False)
+@app.route('/api/students', methods=['GET'])
+def get_students():
+    return jsonify(load_records())
+
+@app.route('/api/students', methods=['POST'])
+def add_student():
+    data = request.json
+    records = load_records()
+    
+    if any(r['id'] == data['id'] for r in records):
+        return jsonify({"success": False, "message": "Student ID already exists!"}), 400
         
-        fee = calculate_fees(info['enrolled_courses'], info['type'], has_hostel, has_transport)
-        
-        graded_courses = {}
-        for course, marks in info['enrolled_courses'].items():
-            grade = evaluate_grade(marks)
-            graded_courses[course] = {"marks": marks if marks is not None else "Pending", "grade": grade}
-            
-            if marks is not None:
-                rows.append({"Course": course, "Marks": marks})
+    course_count = len(data.get('courses', []))
+    base_fee = course_count * 5000
+    
+    amenities_fee = 0
+    if data.get('hostel') == 'Yes': amenities_fee += 15000
+    if data.get('transport') == 'Yes': amenities_fee += 8000
+    
+    new_student = {
+        "id": data['id'],
+        "name": data['name'],
+        "age": data['age'],
+        "tier": data['tier'],
+        "hostel": data['hostel'],
+        "transport": data['transport'],
+        "courses": data.get('courses', []),
+        "total_fee": base_fee + amenities_fee
+    }
+    
+    records.append(new_student)
+    save_records(records)
+    
+    # Generate both updated visual assets
+    generate_pie_chart(records)
+    generate_bar_graph(records)
+    return jsonify({"success": True})
 
-        display_students.append({
-            'id': sid,
-            'name': info['name'],
-            'type': info['type'],
-            'hostel': "Yes" if has_hostel else "No",
-            'transport': "Yes" if has_transport else "No",
-            'courses': graded_courses,
-            'fee': fee
-        })
+@app.route('/api/students/<student_id>', methods=['DELETE'])
+def delete_student(student_id):
+    records = load_records()
+    updated_records = [r for r in records if r['id'] != student_id]
+    save_records(updated_records)
+    
+    # Refresh both visual assets
+    generate_pie_chart(updated_records)
+    generate_bar_graph(updated_records)
+    return jsonify({"success": True})
 
-    # Data Analytics Pipeline (Pandas, NumPy & Matplotlib)
-    chart_url = None
-    if rows:
-        df = pd.DataFrame(rows)
-        course_means = df.groupby("Course")["Marks"].agg(np.mean)
-
-        plt.figure(figsize=(6.5, 3.5))
-        course_means.plot(kind='bar', color=['#3498db', '#2ecc71', '#e74c3c', '#f1c40f'])
-        plt.title('Average Performance Metrics per Course', fontsize=12, fontweight='bold', pad=10)
-        plt.ylabel('Average Marks', fontsize=10)
-        plt.xlabel('Course Titles', fontsize=10)
-        plt.grid(axis='y', linestyle='--', alpha=0.5)
-        plt.tight_layout()
-
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight')
-        img.seek(0)
-        chart_url = base64.b64encode(img.getvalue()).decode('utf-8')
+def generate_pie_chart(records):
+    """Generates a Dark-Mode Pie Chart for Tier Distribution"""
+    static_dir = os.path.join('static')
+    if not os.path.exists(static_dir): os.makedirs(static_dir)
+    chart_path = os.path.join(static_dir, 'analytics_pie.png')
+    
+    if not records:
+        plt.figure(figsize=(5, 4), facecolor='#0f0f1a')
+        plt.text(0.5, 0.5, 'No Tier Data Available', color='white', ha='center', va='center')
+        plt.axis('off')
+        plt.savefig(chart_path, facecolor='#0f0f1a')
         plt.close()
+        return
 
-    return render_template('index.html', students=display_students, chart_url=chart_url)
+    tier_counts = {"Regular": 0, "Scholar": 0}
+    for r in records:
+        if r['tier'] in tier_counts: tier_counts[r['tier']] += 1
 
+    labels = list(tier_counts.keys())
+    sizes = list(tier_counts.values())
+    if sum(sizes) == 0: sizes = [1, 1]
 
-@app.route('/register', methods=['POST'])
-def register():
-    sid = request.form['student_id'].strip().upper()
-    name = request.form['name'].strip()
-    stype = request.form['type']
+    colors = ['#9d4edd', '#00f5d4']
+    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#0f0f1a')
+    ax.set_facecolor('#0f0f1a')
     
-    # Checkbox values are only sent if checked
-    has_hostel = 'hostel' in request.form
-    has_transport = 'transport' in request.form
+    wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors, textprops=dict(color="w"))
+    for autotext in autotexts:
+        autotext.set_color('black')
+        autotext.set_weight('bold')
+
+    plt.title("Student Tier Distribution Matrix", color='white', fontsize=12, pad=10)
+    plt.tight_layout()
+    plt.savefig(chart_path, facecolor='#0f0f1a')
+    plt.close()
+
+def generate_bar_graph(records):
+    """Generates a Dark-Mode Bar Graph mapping Total Fees per Student ID"""
+    static_dir = os.path.join('static')
+    if not os.path.exists(static_dir): os.makedirs(static_dir)
+    chart_path = os.path.join(static_dir, 'analytics_bar.png')
     
-    if not sid or not name:
-        return redirect(url_for('index'))
+    if not records:
+        plt.figure(figsize=(5, 4), facecolor='#0f0f1a')
+        plt.text(0.5, 0.5, 'No Fee Data Available', color='white', ha='center', va='center')
+        plt.axis('off')
+        plt.savefig(chart_path, facecolor='#0f0f1a')
+        plt.close()
+        return
 
-    students = load_data()
-    if sid not in students:
-        students[sid] = {
-            "name": name, 
-            "type": stype, 
-            "hostel": has_hostel,
-            "transport": has_transport,
-            "enrolled_courses": {}
-        }
-        save_data(students)
-        
-    return redirect(url_for('index'))
+    student_ids = [r['id'] for r in records]
+    total_fees = [r['total_fee'] for r in records]
 
-
-@app.route('/enroll', methods=['POST'])
-def enroll():
-    sid = request.form['student_id'].strip().upper()
-    course = request.form['course'].strip()
-    marks_raw = request.form['marks'].strip()
+    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#0f0f1a')
+    ax.set_facecolor('#0f0f1a')
     
-    if not sid or not course:
-        return redirect(url_for('index'))
-
-    students = load_data()
-    if sid in students:
-        marks_val = int(marks_raw) if marks_raw != "" else None
-        students[sid]["enrolled_courses"][course] = marks_val
-        save_data(students)
-        
-    return redirect(url_for('index'))
-
+    # Draw glowing neon pink/magenta bars
+    bars = ax.bar(student_ids, total_fees, color='#ff007f', edgecolor='#ff75c3', width=0.5)
+    
+    # Style text parameters, grids, and boundaries
+    ax.tick_params(colors='white', labelsize=9)
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#444')
+    ax.spines['bottom'].set_color('#444')
+    ax.grid(axis='y', linestyle='--', alpha=0.1, color='white')
+    
+    plt.title("Financial Record Account Mapping (₹)", color='white', fontsize=12, pad=10)
+    plt.ylabel("Total Fee Amount (INR)")
+    plt.xlabel("Student Unique UID")
+    plt.xticks(rotation=15)
+    plt.tight_layout()
+    plt.savefig(chart_path, facecolor='#0f0f1a')
+    plt.close()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    records = load_records()
+    generate_pie_chart(records)
+    generate_bar_graph(records)
+    app.run(debug=True, host='0.0.0.0', port=5000)
