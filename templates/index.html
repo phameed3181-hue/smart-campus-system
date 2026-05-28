@@ -25,7 +25,7 @@
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         header h1 {
@@ -43,13 +43,16 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        @media (max-width: 950px) {
+        @media (max-width: 1100px) {
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 750px) {
             .dashboard-grid { grid-template-columns: 1fr; }
         }
 
@@ -58,7 +61,10 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .full-width {
@@ -69,6 +75,8 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
+            height: 100%;
+            align-content: center;
         }
 
         @media (max-width: 600px) {
@@ -80,18 +88,18 @@
             margin-top: 0;
             border-bottom: 2px solid var(--bg-light);
             padding-bottom: 8px;
-            font-size: 1.3rem;
+            font-size: 1.15rem;
+            font-weight: 700;
         }
 
         .form-group {
             margin-bottom: 12px;
         }
 
-        .marks-row {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
+        .marks-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         label {
@@ -116,36 +124,41 @@
         input:focus, select:focus {
             outline: none;
             border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.12);
         }
 
         .checkbox-group {
-            display: flex;
-            gap: 20px;
-            margin: 12px 0;
+            margin: 15px 0;
         }
 
         .checkbox-group label {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             cursor: pointer;
+            margin-bottom: 10px;
         }
 
-        button {
+        .submit-btn-container {
+            grid-column: 1 / -1;
+            margin-top: 5px;
+        }
+
+        button.main-submit {
             background: var(--primary-blue);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 14px 20px;
+            border-radius: 6px;
             cursor: pointer;
             width: 100%;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 1rem;
             transition: background 0.2s;
+            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.15);
         }
 
-        button:hover {
+        button.main-submit:hover {
             background: #3046bc;
         }
 
@@ -191,10 +204,19 @@
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: bold;
+            display: inline-block;
         }
 
         .badge-active { background: #d1e7dd; color: #0f5132; }
         .badge-inactive { background: #e2e3e5; color: #41464b; }
+        
+        .fee-subtext {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
 
         .purge-btn {
             background: #fff5f5;
@@ -214,14 +236,18 @@
         .chart-wrapper {
             text-align: center;
             background: #ffffff;
-            padding: 10px;
+            padding: 5px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .chart-wrapper img {
             max-width: 100%;
             height: auto;
+            display: block;
         }
     </style>
 </head>
@@ -235,65 +261,87 @@
     <div class="dashboard-grid">
         
         <div class="card">
-            <h2>Add New Student Record</h2>
-            <div class="form-group">
-                <label>Student ID (Unique UID)</label>
-                <input type="text" id="studentId" placeholder="e.g., DSCE-01">
-            </div>
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="studentName" placeholder="Hameed Pinjari">
-            </div>
-            <div class="form-group">
-                <label>Age</label>
-                <input type="number" id="studentAge" placeholder="e.g., 19" min="15" max="100">
-            </div>
-            <div class="form-group">
-                <label>Category Classification Tier</label>
-                <select id="studentTier">
-                    <option value="Regular">Regular (Standard)</option>
-                    <option value="Scholar">Scholar (Premium)</option>
-                </select>
-            </div>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="hostelCheck"> Hostel Facility</label>
-                <label><input type="checkbox" id="transportCheck"> Transport Grid</label>
-            </div>
-            <div class="form-group">
-                <label>Enrolled Courses (Comma Separated)</label>
-                <input type="text" id="studentCourses" placeholder="CAED, C-Programming, Math">
-            </div>
-            
-            <label>Subject Performance Marks (Out of 100)</label>
-            <div class="marks-row">
-                <div>
-                    <input type="number" id="sub1" placeholder="Sub 1" min="0" max="100">
+            <div>
+                <h2>1. Student Identity Details</h2>
+                <div class="form-group">
+                    <label>Student ID (Unique UID)</label>
+                    <input type="text" id="studentId" placeholder="e.g., DSCE-01">
                 </div>
-                <div>
-                    <input type="number" id="sub2" placeholder="Sub 2" min="0" max="100">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="studentName" placeholder="Hameed Pinjari">
                 </div>
-                <div>
-                    <input type="number" id="sub3" placeholder="Sub 3" min="0" max="100">
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="studentAge" placeholder="e.g., 19" min="15" max="100">
                 </div>
-                <div>
-                    <input type="number" id="sub4" placeholder="Sub 4" min="0" max="100">
-                </div>
-                <div>
-                    <input type="number" id="sub5" placeholder="Sub 5" min="0" max="100">
+                <div class="form-group">
+                    <label>Category Classification Tier</label>
+                    <select id="studentTier">
+                        <option value="Regular">Regular (Standard)</option>
+                        <option value="Scholar">Scholar (Premium)</option>
+                    </select>
                 </div>
             </div>
-            
-            <button onclick="commitStudentRecord()">Save Student Record</button>
         </div>
 
         <div class="card">
-            <h2>Statistical Analytics Reports</h2>
+            <div>
+                <h2>2. Course & Facility Enrollment</h2>
+                <div class="form-group">
+                    <label>Enrolled Courses (Comma Separated)</label>
+                    <input type="text" id="studentCourses" placeholder="CAED, C-Programming, Math">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="hostelCheck"> Hostel Facility Allocation (₹15,000)</label>
+                    <label><input type="checkbox" id="transportCheck"> Campus Transport Allocation (₹8,000)</label>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; padding-top: 10px; border-top: 1px solid var(--bg-light);">
+                * Note: Fee is evaluated dynamically at ₹5,000 per course module registration signature.
+            </p>
+        </div>
+
+        <div class="card">
+            <div>
+                <h2>3. Marks Management Panel</h2>
+                <div class="marks-grid">
+                    <div>
+                        <label>Subject 1 Score</label>
+                        <input type="number" id="sub1" placeholder="Marks out of 100" min="0" max="100">
+                    </div>
+                    <div>
+                        <label>Subject 2 Score</label>
+                        <input type="number" id="sub2" placeholder="Marks out of 100" min="0" max="100">
+                    </div>
+                    <div>
+                        <label>Subject 3 Score</label>
+                        <input type="number" id="sub3" placeholder="Marks out of 100" min="0" max="100">
+                    </div>
+                    <div>
+                        <label>Subject 4 Score</label>
+                        <input type="number" id="sub4" placeholder="Marks out of 100" min="0" max="100">
+                    </div>
+                    <div>
+                        <label>Subject 5 Score</label>
+                        <input type="number" id="sub5" placeholder="Marks out of 100" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="submit-btn-container">
+            <button class="main-submit" onclick="commitStudentRecord()">Compile and Commit Record Signature</button>
+        </div>
+
+        <div class="card full-width">
+            <h2>Statistical Analytics Reports Pipeline</h2>
             <div class="charts-container">
                 <div class="chart-wrapper">
-                    <img id="pieChart" src="/static/analytics_pie.png?t=0" alt="Pie Chart">
+                    <img id="pieChart" src="/static/analytics_pie.png?t=0" alt="Pie Chart Distribution Layer">
                 </div>
                 <div class="chart-wrapper">
-                    <img id="barChart" src="/static/analytics_bar.png?t=0" alt="Bar Graph">
+                    <img id="barChart" src="/static/analytics_bar.png?t=0" alt="Bar Chart Metrics Layer">
                 </div>
             </div>
         </div>
@@ -302,7 +350,7 @@
             <h2>Live Database Record Ledger</h2>
             
             <div class="search-container">
-                <input type="text" id="idSearchInput" placeholder="🔍 Search by Student ID..." onkeyup="filterLedgerById()">
+                <input type="text" id="idSearchInput" placeholder="🔍 Type Student ID here to query database records ledger instantly..." onkeyup="filterLedgerById()">
             </div>
 
             <div class="table-responsive">
@@ -313,8 +361,8 @@
                             <th>Name</th>
                             <th>Age</th>
                             <th>Tier</th>
-                            <th>Hostel</th>
-                            <th>Transport</th>
+                            <th>Hostel Info</th>
+                            <th>Transport Info</th>
                             <th>Enrolled Courses</th>
                             <th>Marks Breakdown</th>
                             <th>Total Fee</th>
@@ -348,19 +396,29 @@
             tbody.innerHTML = '';
             
             students.forEach(s => {
+                // Determine active secondary text descriptors for fees
+                const hostelFeeText = s.hostel === 'Yes' ? '<span class="fee-subtext">₹15,000</span>' : '<span class="fee-subtext">₹0</span>';
+                const transportFeeText = s.transport === 'Yes' ? '<span class="fee-subtext">₹8,000</span>' : '<span class="fee-subtext">₹0</span>';
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td style="color: var(--primary-blue); font-weight: bold;">${s.id}</td>
                     <td><strong>${s.name}</strong></td>
                     <td>${s.age || 'N/A'}</td>
                     <td>${s.tier}</td>
-                    <td><span class="badge ${s.hostel === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.hostel}</span></td>
-                    <td><span class="badge ${s.transport === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.transport}</span></td>
-                    <td>${s.courses.join(', ') || 'None'}</td>
+                    <td>
+                        <span class="badge ${s.hostel === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.hostel}</span>
+                        ${hostelFeeText}
+                    </td>
+                    <td>
+                        <span class="badge ${s.transport === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.transport}</span>
+                        ${transportFeeText}
+                    </td>
+                    <td>${s.courses.join(', ') || 'None'}<span class="fee-subtext">₹${(s.courses.length * 5000).toLocaleString()}</span></td>
                     <td style="font-size:0.85rem; color: var(--text-muted);">
                         S1:<strong>${s.sub1}</strong> | S2:<strong>${s.sub2}</strong> | S3:<strong>${s.sub3}</strong> | S4:<strong>${s.sub4}</strong> | S5:<strong>${s.sub5}</strong>
                     </td>
-                    <td style="font-weight: bold; color: var(--primary-purple);">₹${s.total_fee.toLocaleString()}</td>
+                    <td style="font-weight: bold; color: var(--primary-purple); font-size: 1rem;">₹${s.total_fee.toLocaleString()}</td>
                     <td><button class="purge-btn" onclick="purgeRecord('${s.id}')">Delete</button></td>
                 `;
                 tbody.appendChild(row);
@@ -376,7 +434,6 @@
             const transport = document.getElementById('transportCheck').checked ? 'Yes' : 'No';
             const coursesInput = document.getElementById('studentCourses').value;
             
-            // Marks values
             const sub1 = parseInt(document.getElementById('sub1').value) || 0;
             const sub2 = parseInt(document.getElementById('sub2').value) || 0;
             const sub3 = parseInt(document.getElementById('sub3').value) || 0;
@@ -386,7 +443,7 @@
             const courses = coursesInput.split(',').map(c => c.trim()).filter(c => c.length > 0);
 
             if(!id || !name || !age) {
-                alert("Please fill out Student ID, Name, and Age before saving.");
+                alert("Validation Fault: Student ID, Name, and Age require definitions.");
                 return;
             }
 
