@@ -1,0 +1,19 @@
+{
+    "DSCE2": {
+        "name": "farhhhhh",
+        "type": "Scholar",
+        "enrolled_courses": {
+            "python": 92
+        }
+    },
+    "DSCE001": {
+        "name": "hameed",
+        "type": "Scholar",
+        "hostel": true,
+        "transport": true,
+        "enrolled_courses": {
+            "communication skills": 100,
+            "physics": 100
+        }
+    }
+}
