@@ -1,154 +1,157 @@
-from flask import Flask, render_template, request, jsonify
-import json
+from flask import Flask, render_template, request, redirect, url_for
 import os
+import json
+import pandas as pd
+import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # Prevents GUI interface errors on cloud servers like Render
+matplotlib.use('Agg')  # Prevents GUI popups on the server background
 import matplotlib.pyplot as plt
+import io
+import base64
 
 app = Flask(__name__)
-DATA_FILE = 'campus_records.json'
+STORAGE_FILE = "campus_records.json"
 
-def load_records():
-    if not os.path.exists(DATA_FILE):
-        return []
+# ==========================================
+# FILE MANAGEMENT & UTILITY FUNCTIONS
+# ==========================================
+
+def load_data():
+    """Loads student records from the JSON file database safely."""
+    if os.path.exists(STORAGE_FILE):
+        try:
+            with open(STORAGE_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            print("Error reading database file. Initializing empty dataset.")
+            return {}
+    return {}
+
+def save_data(data):
+    """Saves student records to the JSON file database."""
     try:
-        with open(DATA_FILE, 'r') as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        return []
+        with open(STORAGE_FILE, 'w') as f:
+            json.dump(data, f, indent=4)
+    except IOError as e:
+        print(f"Failed to write data to disk: {e}")
 
-def save_records(records):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(records, f, indent=4)
+def calculate_fees(enrolled_courses, student_type):
+    """Calculates dynamic academic fees based on courses and student status."""
+    base_fee_per_course = 5000
+    total_fee = len(enrolled_courses) * base_fee_per_course
+    
+    # 20% fee concession for Scholars
+    if student_type.lower() == "scholar":
+        total_fee *= 0.80  
+        
+    return total_fee
 
-def calculate_fees(student_data):
-    course_count = len(student_data.get('courses', []))
-    base_fee = course_count * 5000
-    amenities_fee = 0
-    if student_data.get('hostel') == 'Yes': amenities_fee += 15000
-    if student_data.get('transport') == 'Yes': amenities_fee += 8000
-    return base_fee + amenities_fee
+def evaluate_grade(marks):
+    """Evaluates letter grades using standard numeric boundaries."""
+    if marks is None: return "N/A"
+    if marks >= 90: return "S"
+    elif marks >= 80: return "A"
+    elif marks >= 70: return "B"
+    elif marks >= 60: return "C"
+    elif marks >= 50: return "D"
+    else: return "F"
+
+
+# ==========================================
+# WEB APPLICATION ROUTES
+# ==========================================
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    students = load_data()
+    display_students = []
+    rows = []
 
-@app.route('/api/students', methods=['GET'])
-def get_students():
-    return jsonify(load_records())
-
-# OPERATION 1: Add Base Student Profile
-@app.route('/api/students', methods=['POST'])
-def add_student_identity():
-    data = request.json
-    records = load_records()
-    
-    if any(r['id'] == data['id'] for r in records):
-        return jsonify({"success": False, "message": "Student ID already exists!"}), 400
+    # Process records for rendering and map to data structures
+    for sid, info in students.items():
+        fee = calculate_fees(info['enrolled_courses'], info['type'])
         
-    new_student = {
-        "id": data['id'],
-        "name": data['name'],
-        "age": data['age'],
-        "tier": data['tier'],
-        "hostel": "No",
-        "transport": "No",
-        "courses": [],
-        "sub1": 0, "sub2": 0, "sub3": 0, "sub4": 0, "sub5": 0,
-        "total_fee": 0
-    }
-    
-    records.append(new_student)
-    save_records(records)
-    
-    generate_pie_chart(records)
-    generate_bar_graph(records)
-    return jsonify({"success": True, "message": "Student profile added successfully! Now use Block 2 to add courses & facilities."})
-
-# OPERATION 2: Add Student Courses, Facilities & Academic Marks
-@app.route('/api/students/enrollment', methods=['POST'])
-def update_student_enrollment():
-    data = request.json
-    records = load_records()
-    
-    student_to_update = None
-    for r in records:
-        if r['id'] == data['id']:
-            student_to_update = r
-            break
+        # Build courses dict with letter grades appended
+        graded_courses = {}
+        for course, marks in info['enrolled_courses'].items():
+            grade = evaluate_grade(marks)
+            graded_courses[course] = {"marks": marks if marks is not None else "Pending", "grade": grade}
             
-    if not student_to_update:
-        return jsonify({"success": False, "message": "Student ID not found! Please create the profile in Block 1 first."}), 404
+            if marks is not None:
+                rows.append({"Course": course, "Marks": marks})
+
+        display_students.append({
+            'id': sid,
+            'name': info['name'],
+            'type': info['type'],
+            'courses': graded_courses,
+            'fee': fee
+        })
+
+    # Data Analytics Pipeline (Pandas, NumPy & Matplotlib)
+    chart_url = None
+    if rows:
+        df = pd.DataFrame(rows)
+        # Compute mean scores grouped by individual course entities using NumPy
+        course_means = df.groupby("Course")["Marks"].agg(np.mean)
+
+        # Generate a clean matplotlib visualization
+        plt.figure(figsize=(6.5, 3.5))
+        course_means.plot(kind='bar', color=['#3498db', '#2ecc71', '#e74c3c', '#f1c40f'])
+        plt.title('Average Performance Metrics per Course', fontsize=12, fontweight='bold', pad=10)
+        plt.ylabel('Average Marks', fontsize=10)
+        plt.xlabel('Course Titles', fontsize=10)
+        plt.grid(axis='y', linestyle='--', alpha=0.5)
+        plt.tight_layout()
+
+        # Buffer conversion string pipeline for HTML rendering
+        img = io.BytesIO()
+        plt.savefig(img, format='png', bbox_inches='tight')
+        img.seek(0)
+        chart_url = base64.b64encode(img.getvalue()).decode('utf-8')
+        plt.close()
+
+    return render_template('index.html', students=display_students, chart_url=chart_url)
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    """Handles new student additions and data serialization."""
+    sid = request.form['student_id'].strip().upper()
+    name = request.form['name'].strip()
+    stype = request.form['type']
+    
+    if not sid or not name:
+        return redirect(url_for('index'))
+
+    students = load_data()
+    if sid not in students:
+        students[sid] = {"name": name, "type": stype, "enrolled_courses": {}}
+        save_data(students)
         
-    # Bind incoming values
-    student_to_update['courses'] = data.get('courses', [])
-    student_to_update['hostel'] = data.get('hostel', 'No')
-    student_to_update['transport'] = data.get('transport', 'No')
-    student_to_update['sub1'] = data.get('sub1', 0)
-    student_to_update['sub2'] = data.get('sub2', 0)
-    student_to_update['sub3'] = data.get('sub3', 0)
-    student_to_update['sub4'] = data.get('sub4', 0)
-    student_to_update['sub5'] = data.get('sub5', 0)
+    return redirect(url_for('index'))
+
+
+@app.route('/enroll', methods=['POST'])
+def enroll():
+    """Handles class enrollments and numeric value metric assessments."""
+    sid = request.form['student_id'].strip().upper()
+    course = request.form['course'].strip()
+    marks_raw = request.form['marks'].strip()
     
-    # Recalculate financial breakdown metrics
-    student_to_update['total_fee'] = calculate_fees(student_to_update)
-    
-    save_records(records)
-    generate_pie_chart(records)
-    generate_bar_graph(records)
-    return jsonify({"success": True, "message": "Student courses, facilities, and marks successfully updated!"})
+    if not sid or not course:
+        return redirect(url_for('index'))
 
-@app.route('/api/students/<student_id>', methods=['DELETE'])
-def delete_student(student_id):
-    records = load_records()
-    updated_records = [r for r in records if r['id'] != student_id]
-    save_records(updated_records)
-    
-    generate_pie_chart(updated_records)
-    generate_bar_graph(updated_records)
-    return jsonify({"success": True})
+    students = load_data()
+    if sid in students:
+        # Convert input to integer if user added scores, else store as None
+        marks_val = int(marks_raw) if marks_raw != "" else None
+        students[sid]["enrolled_courses"][course] = marks_val
+        save_data(students)
+        
+    return redirect(url_for('index'))
 
-def generate_pie_chart(records):
-    static_dir = os.path.join(os.path.dirname(__file__), 'static')
-    if not os.path.exists(static_dir): os.makedirs(static_dir, exist_ok=True)
-    chart_path = os.path.join(static_dir, 'analytics_pie.png')
-    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
-    ax.set_facecolor('#ffffff')
-
-    if not records:
-        ax.text(0.5, 0.5, 'No Data Found', color='#6c757d', ha='center', va='center', weight='bold')
-        ax.axis('off')
-        plt.savefig(chart_path, dpi=150); plt.close(); return
-
-    tier_counts = {"Regular": 0, "Scholar": 0}
-    for r in records:
-        if r['tier'] in tier_counts: tier_counts[r['tier']] += 1
-
-    ax.pie(list(tier_counts.values()), labels=list(tier_counts.keys()), autopct='%1.1f%%', startangle=140, colors=['#4361ee', '#4cc9f0'])
-    plt.title("Student Tier Distribution Matrix", color='#2b2d42', weight='bold')
-    plt.tight_layout()
-    plt.savefig(chart_path, dpi=150); plt.close()
-
-def generate_bar_graph(records):
-    static_dir = os.path.join(os.path.dirname(__file__), 'static')
-    if not os.path.exists(static_dir): os.makedirs(static_dir, exist_ok=True)
-    chart_path = os.path.join(static_dir, 'analytics_bar.png')
-    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
-    ax.set_facecolor('#ffffff')
-
-    if not records:
-        ax.text(0.5, 0.5, 'No Fee Data Found', color='#6c757d', ha='center', va='center', weight='bold')
-        ax.axis('off')
-        plt.savefig(chart_path, dpi=150); plt.close(); return
-
-    student_ids = [str(r['id']) for r in records]
-    total_fees = [float(r['total_fee']) for r in records]
-
-    ax.bar(student_ids, total_fees, color='#7209b7', width=0.4)
-    ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
-    plt.title("Financial Record Account Mapping (₹)", color='#2b2d42', weight='bold')
-    plt.tight_layout()
-    plt.savefig(chart_path, dpi=150); plt.close()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Start local server debug mode
+    app.run(debug=True)
