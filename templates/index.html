@@ -43,16 +43,13 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1.3fr;
             gap: 20px;
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        @media (max-width: 1100px) {
-            .dashboard-grid { grid-template-columns: 1fr 1fr; }
-        }
-        @media (max-width: 750px) {
+        @media (max-width: 950px) {
             .dashboard-grid { grid-template-columns: 1fr; }
         }
 
@@ -71,18 +68,6 @@
             grid-column: 1 / -1;
         }
 
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            height: 100%;
-            align-content: center;
-        }
-
-        @media (max-width: 600px) {
-            .charts-container { grid-template-columns: 1fr; }
-        }
-
         h2 {
             color: var(--primary-purple);
             margin-top: 0;
@@ -96,10 +81,12 @@
             margin-bottom: 12px;
         }
 
-        .marks-grid {
-            display: flex;
-            flex-direction: column;
+        .course-marks-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
             gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
         }
 
         label {
@@ -129,6 +116,8 @@
 
         .checkbox-group {
             margin: 15px 0;
+            display: flex;
+            gap: 20px;
         }
 
         .checkbox-group label {
@@ -136,12 +125,10 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            margin-bottom: 10px;
         }
 
         .submit-btn-container {
             grid-column: 1 / -1;
-            margin-top: 5px;
         }
 
         button.main-submit {
@@ -170,6 +157,8 @@
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .table-responsive {
@@ -195,10 +184,6 @@
             font-weight: 600;
         }
 
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-
         .badge {
             padding: 3px 6px;
             border-radius: 4px;
@@ -216,6 +201,16 @@
             color: var(--text-muted);
             margin-top: 2px;
             font-weight: 500;
+        }
+
+        .course-tag {
+            background: #f1f3f5;
+            border: 1px solid #dee2e6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 2px;
+            font-size: 0.8rem;
         }
 
         .purge-btn {
@@ -236,18 +231,18 @@
         .chart-wrapper {
             text-align: center;
             background: #ffffff;
-            padding: 5px;
+            padding: 15px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         .chart-wrapper img {
             max-width: 100%;
             height: auto;
             display: block;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -262,7 +257,7 @@
         
         <div class="card">
             <div>
-                <h2>1. Student Identity Details</h2>
+                <h2>1. Core Identity & Services</h2>
                 <div class="form-group">
                     <label>Student ID (Unique UID)</label>
                     <input type="text" id="studentId" placeholder="e.g., DSCE-01">
@@ -282,75 +277,63 @@
                         <option value="Scholar">Scholar (Premium)</option>
                     </select>
                 </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <h2>2. Course & Facility Enrollment</h2>
-                <div class="form-group">
-                    <label>Enrolled Courses (Comma Separated)</label>
-                    <input type="text" id="studentCourses" placeholder="CAED, C-Programming, Math">
-                </div>
                 <div class="checkbox-group">
-                    <label><input type="checkbox" id="hostelCheck"> Hostel Facility Allocation (₹15,000)</label>
-                    <label><input type="checkbox" id="transportCheck"> Campus Transport Allocation (₹8,000)</label>
+                    <label><input type="checkbox" id="hostelCheck"> Hostel (₹15,000)</label>
+                    <label><input type="checkbox" id="transportCheck"> Transport (₹8,000)</label>
                 </div>
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; padding-top: 10px; border-top: 1px solid var(--bg-light);">
-                * Note: Fee is evaluated dynamically at ₹5,000 per course module registration signature.
-            </p>
         </div>
 
         <div class="card">
             <div>
-                <h2>3. Marks Management Panel</h2>
-                <div class="marks-grid">
-                    <div>
-                        <label>Subject 1 Score</label>
-                        <input type="number" id="sub1" placeholder="Marks out of 100" min="0" max="100">
-                    </div>
-                    <div>
-                        <label>Subject 2 Score</label>
-                        <input type="number" id="sub2" placeholder="Marks out of 100" min="0" max="100">
-                    </div>
-                    <div>
-                        <label>Subject 3 Score</label>
-                        <input type="number" id="sub3" placeholder="Marks out of 100" min="0" max="100">
-                    </div>
-                    <div>
-                        <label>Subject 4 Score</label>
-                        <input type="number" id="sub4" placeholder="Marks out of 100" min="0" max="100">
-                    </div>
-                    <div>
-                        <label>Subject 5 Score</label>
-                        <input type="number" id="sub5" placeholder="Marks out of 100" min="0" max="100">
-                    </div>
+                <h2>2. Course Enrollment & Marks Management Grid</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top:-5px; margin-bottom:15px;">
+                    Enter the Course Name and the corresponding student score directly alongside it. Blank rows will be ignored.
+                </p>
+                
+                <div class="course-marks-row" style="font-weight: bold; font-size: 0.85rem; color: var(--primary-blue);">
+                    <div>Course Module Name</div>
+                    <div>Score (100)</div>
+                </div>
+
+                <div class="course-marks-row">
+                    <input type="text" class="course-name-input" placeholder="e.g., C-Programming">
+                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
+                </div>
+                <div class="course-marks-row">
+                    <input type="text" class="course-name-input" placeholder="e.g., Mathematics">
+                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
+                </div>
+                <div class="course-marks-row">
+                    <input type="text" class="course-name-input" placeholder="e.g., CAED">
+                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
+                </div>
+                <div class="course-marks-row">
+                    <input type="text" class="course-name-input" placeholder="e.g., Data Structures">
+                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
+                </div>
+                <div class="course-marks-row">
+                    <input type="text" class="course-name-input" placeholder="e.g., Python Lab">
+                    <input type="number" class="course-score-input" placeholder="Marks" min="0" max="100">
                 </div>
             </div>
         </div>
 
         <div class="submit-btn-container">
-            <button class="main-submit" onclick="commitStudentRecord()">Compile and Commit Record Signature</button>
+            <button class="main-submit" onclick="commitStudentRecord()">Compile and Commit Unified Record Signature</button>
         </div>
 
         <div class="card full-width">
-            <h2>Statistical Analytics Reports Pipeline</h2>
-            <div class="charts-container">
-                <div class="chart-wrapper">
-                    <img id="pieChart" src="/static/analytics_pie.png?t=0" alt="Pie Chart Distribution Layer">
-                </div>
-                <div class="chart-wrapper">
-                    <img id="barChart" src="/static/analytics_bar.png?t=0" alt="Bar Chart Metrics Layer">
-                </div>
+            <h2>Statistical Analytics Performance Pipeline</h2>
+            <div class="chart-wrapper">
+                <img id="barChart" src="/static/analytics_bar.png?t=0" alt="Bar Chart Metrics Layer">
             </div>
         </div>
 
         <div class="card full-width">
             <h2>Live Database Record Ledger</h2>
-            
             <div class="search-container">
-                <input type="text" id="idSearchInput" placeholder="🔍 Type Student ID here to query database records ledger instantly..." onkeyup="filterLedgerById()">
+                <input type="text" id="idSearchInput" placeholder="🔍 Search records ledger by unique student ID..." onkeyup="filterLedgerById()">
             </div>
 
             <div class="table-responsive">
@@ -363,8 +346,7 @@
                             <th>Tier</th>
                             <th>Hostel Info</th>
                             <th>Transport Info</th>
-                            <th>Enrolled Courses</th>
-                            <th>Marks Breakdown</th>
+                            <th>Enrolled Courses & Scores</th>
                             <th>Total Fee</th>
                             <th>Actions</th>
                         </tr>
@@ -386,7 +368,6 @@
                 .then(data => {
                     renderTable(data);
                     const timestamp = new Date().getTime();
-                    document.getElementById('pieChart').src = "/static/analytics_pie.png?t=" + timestamp;
                     document.getElementById('barChart').src = "/static/analytics_bar.png?t=" + timestamp;
                 });
         }
@@ -396,9 +377,19 @@
             tbody.innerHTML = '';
             
             students.forEach(s => {
-                // Determine active secondary text descriptors for fees
                 const hostelFeeText = s.hostel === 'Yes' ? '<span class="fee-subtext">₹15,000</span>' : '<span class="fee-subtext">₹0</span>';
                 const transportFeeText = s.transport === 'Yes' ? '<span class="fee-subtext">₹8,000</span>' : '<span class="fee-subtext">₹0</span>';
+
+                let courseScoresHTML = '';
+                let validCourseCount = 0;
+                if(s.course_scores && s.course_scores.length > 0) {
+                    validCourseCount = s.course_scores.length;
+                    s.course_scores.forEach(item => {
+                        courseScoresHTML += `<span class="course-tag"><strong>${item.course}</strong>: ${item.marks}</span>`;
+                    });
+                } else {
+                    courseScoresHTML = '<span class="text-muted">No Enrolled Courses</span>';
+                }
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -414,9 +405,9 @@
                         <span class="badge ${s.transport === 'Yes' ? 'badge-active' : 'badge-inactive'}">${s.transport}</span>
                         ${transportFeeText}
                     </td>
-                    <td>${s.courses.join(', ') || 'None'}<span class="fee-subtext">₹${(s.courses.length * 5000).toLocaleString()}</span></td>
-                    <td style="font-size:0.85rem; color: var(--text-muted);">
-                        S1:<strong>${s.sub1}</strong> | S2:<strong>${s.sub2}</strong> | S3:<strong>${s.sub3}</strong> | S4:<strong>${s.sub4}</strong> | S5:<strong>${s.sub5}</strong>
+                    <td>
+                        ${courseScoresHTML}
+                        <span class="fee-subtext">₹${(validCourseCount * 5000).toLocaleString()} (Tuition)</span>
                     </td>
                     <td style="font-weight: bold; color: var(--primary-purple); font-size: 1rem;">₹${s.total_fee.toLocaleString()}</td>
                     <td><button class="purge-btn" onclick="purgeRecord('${s.id}')">Delete</button></td>
@@ -432,22 +423,25 @@
             const tier = document.getElementById('studentTier').value;
             const hostel = document.getElementById('hostelCheck').checked ? 'Yes' : 'No';
             const transport = document.getElementById('transportCheck').checked ? 'Yes' : 'No';
-            const coursesInput = document.getElementById('studentCourses').value;
             
-            const sub1 = parseInt(document.getElementById('sub1').value) || 0;
-            const sub2 = parseInt(document.getElementById('sub2').value) || 0;
-            const sub3 = parseInt(document.getElementById('sub3').value) || 0;
-            const sub4 = parseInt(document.getElementById('sub4').value) || 0;
-            const sub5 = parseInt(document.getElementById('sub5').value) || 0;
-            
-            const courses = coursesInput.split(',').map(c => c.trim()).filter(c => c.length > 0);
+            const nameInputs = document.querySelectorAll('.course-name-input');
+            const scoreInputs = document.querySelectorAll('.course-score-input');
+            const course_scores = [];
+
+            for(let i=0; i < nameInputs.length; i++) {
+                const cName = nameInputs[i].value.trim();
+                const cScore = parseInt(scoreInputs[i].value) || 0;
+                if(cName !== "") {
+                    course_scores.push({ course: cName, marks: cScore });
+                }
+            }
 
             if(!id || !name || !age) {
                 alert("Validation Fault: Student ID, Name, and Age require definitions.");
                 return;
             }
 
-            const payload = { id, name, age, tier, hostel, transport, courses, sub1, sub2, sub3, sub4, sub5 };
+            const payload = { id, name, age, tier, hostel, transport, course_scores };
 
             fetch('/api/students', {
                 method: 'POST',
@@ -460,14 +454,12 @@
                     document.getElementById('studentId').value = '';
                     document.getElementById('studentName').value = '';
                     document.getElementById('studentAge').value = '';
-                    document.getElementById('studentCourses').value = '';
-                    document.getElementById('sub1').value = '';
-                    document.getElementById('sub2').value = '';
-                    document.getElementById('sub3').value = '';
-                    document.getElementById('sub4').value = '';
-                    document.getElementById('sub5').value = '';
                     document.getElementById('hostelCheck').checked = false;
                     document.getElementById('transportCheck').checked = false;
+                    
+                    nameInputs.forEach(i => i.value = '');
+                    scoreInputs.forEach(i => i.value = '');
+                    
                     refreshLedgerData();
                 } else {
                     alert(data.message);
