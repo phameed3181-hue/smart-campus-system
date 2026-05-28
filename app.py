@@ -37,7 +37,10 @@ def add_student():
     if any(r['id'] == data['id'] for r in records):
         return jsonify({"success": False, "message": "Student ID already exists!"}), 400
         
-    course_count = len(data.get('courses', []))
+    course_entries = data.get('course_scores', [])
+    course_count = len(course_entries)
+    
+    # Calculate Total Fee based on 5,000 per valid enrolled course
     base_fee = course_count * 5000
     
     amenities_fee = 0
@@ -51,20 +54,14 @@ def add_student():
         "tier": data['tier'],
         "hostel": data['hostel'],
         "transport": data['transport'],
-        "courses": data.get('courses', []),
-        "sub1": data.get('sub1', 0),
-        "sub2": data.get('sub2', 0),
-        "sub3": data.get('sub3', 0),
-        "sub4": data.get('sub4', 0),
-        "sub5": data.get('sub5', 0),
+        "course_scores": course_entries,
         "total_fee": base_fee + amenities_fee
     }
     
     records.append(new_student)
     save_records(records)
     
-    # Trigger fresh data charts
-    generate_pie_chart(records)
+    # Generate only the Bar Graph asset
     generate_bar_graph(records)
     return jsonify({"success": True})
 
@@ -74,52 +71,9 @@ def delete_student(student_id):
     updated_records = [r for r in records if r['id'] != student_id]
     save_records(updated_records)
     
-    generate_pie_chart(updated_records)
+    # Refresh the Bar Graph asset
     generate_bar_graph(updated_records)
     return jsonify({"success": True})
-
-def generate_pie_chart(records):
-    """Generates a Professional Light-Mode Pie Chart inside static directory"""
-    static_dir = os.path.join(os.path.dirname(__file__), 'static')
-    if not os.path.exists(static_dir):
-        os.makedirs(static_dir, exist_ok=True)
-        
-    chart_path = os.path.join(static_dir, 'analytics_pie.png')
-    
-    # Setup crisp white canvas base parameters
-    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
-    ax.set_facecolor('#ffffff')
-
-    if not records:
-        ax.text(0.5, 0.5, 'No Tier Data Found\n(Add records to view map)', 
-                color='#6c757d', ha='center', va='center', fontsize=11, weight='bold')
-        ax.axis('off')
-        plt.tight_layout()
-        plt.savefig(chart_path, facecolor='#ffffff', dpi=150)
-        plt.close()
-        return
-
-    tier_counts = {"Regular": 0, "Scholar": 0}
-    for r in records:
-        if r['tier'] in tier_counts: tier_counts[r['tier']] += 1
-
-    labels = list(tier_counts.keys())
-    sizes = list(tier_counts.values())
-    
-    if sum(sizes) == 0:
-        sizes = [1, 1]
-
-    colors = ['#4361ee', '#4cc9f0']
-    wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%', 
-                                      startangle=140, colors=colors, textprops=dict(color="#2b2d42"))
-    for autotext in autotexts:
-        autotext.set_color('white')
-        autotext.set_weight('bold')
-
-    plt.title("Student Tier Distribution Matrix", color='#2b2d42', fontsize=12, pad=10, weight='bold')
-    plt.tight_layout()
-    plt.savefig(chart_path, facecolor='#ffffff', dpi=150)
-    plt.close()
 
 def generate_bar_graph(records):
     """Generates a Professional Light-Mode Bar Graph inside static directory"""
@@ -129,11 +83,11 @@ def generate_bar_graph(records):
         
     chart_path = os.path.join(static_dir, 'analytics_bar.png')
     
-    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
+    fig, ax = plt.subplots(figsize=(6, 4), facecolor='#ffffff')
     ax.set_facecolor('#ffffff')
 
     if not records:
-        ax.text(0.5, 0.5, 'No Fee Data Found\n(Add records to view map)', 
+        ax.text(0.5, 0.5, 'No Data Found\n(Add student records to generate visualization)', 
                 color='#6c757d', ha='center', va='center', fontsize=11, weight='bold')
         ax.axis('off')
         plt.tight_layout()
@@ -144,7 +98,8 @@ def generate_bar_graph(records):
     student_ids = [r['id'] for r in records]
     total_fees = [r['total_fee'] for r in records]
 
-    bars = ax.bar(student_ids, total_fees, color='#7209b7', edgecolor='#560bad', width=0.4)
+    # Draw modern purple metric tracking bars
+    ax.bar(student_ids, total_fees, color='#7209b7', edgecolor='#560bad', width=0.4)
     
     ax.tick_params(colors='#2b2d42', labelsize=9)
     ax.xaxis.label.set_color('#2b2d42')
@@ -165,6 +120,5 @@ def generate_bar_graph(records):
 
 if __name__ == '__main__':
     records = load_records()
-    generate_pie_chart(records)
     generate_bar_graph(records)
     app.run(debug=True, host='0.0.0.0', port=5000)
