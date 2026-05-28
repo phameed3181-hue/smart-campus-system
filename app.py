@@ -37,7 +37,6 @@ def add_student():
     if any(r['id'] == data['id'] for r in records):
         return jsonify({"success": False, "message": "Student ID already exists!"}), 400
         
-    # Calculate Total Fee based on 5,000 per course
     course_count = len(data.get('courses', []))
     base_fee = course_count * 5000
     
@@ -64,6 +63,7 @@ def add_student():
     records.append(new_student)
     save_records(records)
     
+    # Trigger fresh data charts
     generate_pie_chart(records)
     generate_bar_graph(records)
     return jsonify({"success": True})
@@ -79,16 +79,23 @@ def delete_student(student_id):
     return jsonify({"success": True})
 
 def generate_pie_chart(records):
-    """Generates a Professional Light-Mode Pie Chart"""
-    static_dir = os.path.join('static')
-    if not os.path.exists(static_dir): os.makedirs(static_dir)
+    """Generates a Professional Light-Mode Pie Chart inside static directory"""
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    if not os.path.exists(static_dir):
+        os.makedirs(static_dir, exist_ok=True)
+        
     chart_path = os.path.join(static_dir, 'analytics_pie.png')
     
+    # Setup crisp white canvas base parameters
+    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
+    ax.set_facecolor('#ffffff')
+
     if not records:
-        plt.figure(figsize=(5, 4), facecolor='#ffffff')
-        plt.text(0.5, 0.5, 'No Tier Data Available', color='#333333', ha='center', va='center')
-        plt.axis('off')
-        plt.savefig(chart_path, facecolor='#ffffff')
+        ax.text(0.5, 0.5, 'No Tier Data Found\n(Add records to view map)', 
+                color='#6c757d', ha='center', va='center', fontsize=11, weight='bold')
+        ax.axis('off')
+        plt.tight_layout()
+        plt.savefig(chart_path, facecolor='#ffffff', dpi=150)
         plt.close()
         return
 
@@ -98,59 +105,62 @@ def generate_pie_chart(records):
 
     labels = list(tier_counts.keys())
     sizes = list(tier_counts.values())
-    if sum(sizes) == 0: sizes = [1, 1]
-
-    colors = ['#4361ee', '#4cc9f0']  # Royal blue and soft sky blue
-    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
-    ax.set_facecolor('#ffffff')
     
-    wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors, textprops=dict(color="#333333"))
+    if sum(sizes) == 0:
+        sizes = [1, 1]
+
+    colors = ['#4361ee', '#4cc9f0']
+    wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%', 
+                                      startangle=140, colors=colors, textprops=dict(color="#2b2d42"))
     for autotext in autotexts:
         autotext.set_color('white')
         autotext.set_weight('bold')
 
-    plt.title("Student Tier Distribution Matrix", color='#333333', fontsize=12, pad=10, weight='bold')
+    plt.title("Student Tier Distribution Matrix", color='#2b2d42', fontsize=12, pad=10, weight='bold')
     plt.tight_layout()
-    plt.savefig(chart_path, facecolor='#ffffff')
+    plt.savefig(chart_path, facecolor='#ffffff', dpi=150)
     plt.close()
 
 def generate_bar_graph(records):
-    """Generates a Professional Light-Mode Bar Graph"""
-    static_dir = os.path.join('static')
-    if not os.path.exists(static_dir): os.makedirs(static_dir)
+    """Generates a Professional Light-Mode Bar Graph inside static directory"""
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    if not os.path.exists(static_dir):
+        os.makedirs(static_dir, exist_ok=True)
+        
     chart_path = os.path.join(static_dir, 'analytics_bar.png')
     
+    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
+    ax.set_facecolor('#ffffff')
+
     if not records:
-        plt.figure(figsize=(5, 4), facecolor='#ffffff')
-        plt.text(0.5, 0.5, 'No Fee Data Available', color='#333333', ha='center', va='center')
-        plt.axis('off')
-        plt.savefig(chart_path, facecolor='#ffffff')
+        ax.text(0.5, 0.5, 'No Fee Data Found\n(Add records to view map)', 
+                color='#6c757d', ha='center', va='center', fontsize=11, weight='bold')
+        ax.axis('off')
+        plt.tight_layout()
+        plt.savefig(chart_path, facecolor='#ffffff', dpi=150)
         plt.close()
         return
 
     student_ids = [r['id'] for r in records]
     total_fees = [r['total_fee'] for r in records]
 
-    fig, ax = plt.subplots(figsize=(5, 4), facecolor='#ffffff')
-    ax.set_facecolor('#ffffff')
+    bars = ax.bar(student_ids, total_fees, color='#7209b7', edgecolor='#560bad', width=0.4)
     
-    bars = ax.bar(student_ids, total_fees, color='#7209b7', edgecolor='#560bad', width=0.5)
-    
-    ax.tick_params(colors='#333333', labelsize=9)
-    ax.xaxis.label.set_color('#333333')
-    ax.yaxis.label.set_color('#333333')
+    ax.tick_params(colors='#2b2d42', labelsize=9)
+    ax.xaxis.label.set_color('#2b2d42')
+    ax.yaxis.label.set_color('#2b2d42')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_color('#cccccc')
-    ax.spines['bottom'].set_color('#cccccc')
-    ax.grid(axis='y', linestyle='--', alpha=0.3, color='#cccccc')
+    ax.spines['left'].set_color('#dee2e6')
+    ax.spines['bottom'].set_color('#dee2e6')
+    ax.grid(axis='y', linestyle='--', alpha=0.5, color='#dee2e6')
     
-    plt.title("Financial Record Account Mapping (₹)", color='#333333', fontsize=12, pad=10, weight='bold')
+    plt.title("Financial Record Account Mapping (₹)", color='#2b2d42', fontsize=12, pad=10, weight='bold')
     plt.ylabel("Total Fee Amount (INR)")
     plt.xlabel("Student Unique ID")
     plt.xticks(rotation=15)
     plt.tight_layout()
-    plt.savefig(chart_path, facecolor='#ffffff')
+    plt.savefig(chart_path, facecolor='#ffffff', dpi=150)
     plt.close()
 
 if __name__ == '__main__':
